@@ -27,7 +27,7 @@
 #include "../uboot_version.h"
 #include <configs/rt2880.h>
 
-#define U_BOOT_VERSION	"U-Boot 1.1.3"
+#define U_BOOT_VERSION	"U-Boot 1.1.3 for AI7688H-64MB"
 
 #if defined (RT2880_ASIC_BOARD) || defined (RT2883_ASIC_BOARD) || defined (RT3052_ASIC_BOARD) || defined (RT3352_ASIC_BOARD) || defined (RT3883_ASIC_BOARD) || defined (RT5350_ASIC_BOARD) || defined (RT6855_ASIC_BOARD) || defined (RT6855A_ASIC_BOARD) || defined (MT7620_ASIC_BOARD) || defined (MT7621_ASIC_BOARD) ||defined (MT7628_ASIC_BOARD)
 #define CHIP_TYPE	"ASIC"
