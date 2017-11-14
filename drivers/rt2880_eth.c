@@ -1966,6 +1966,23 @@ void rt305x_esw_init(void)
 #define RSTCTRL_EPHY_RST	(1<<24)
 #define MT7628_EPHY_EN	        (0x1f<<16)
 #define MT7628_P0_EPHY_AIO_EN   (1<<16)	
+#define MT7628_P1_EPHY_AIO_EN	(1<<17)
+#define MT7628_P2_EPHY_AIO_EN	(1<<18)
+
+#define MT7628_ENABLED_PORTS	(MT7628_P0_EPHY_AIO_EN | MT7628_P1_EPHY_AIO_EN | MT7628_P2_EPHY_AIO_EN)
+
+#define GPIO2_MODE_LED			0x00
+#define GPIO2_MODE_GPIO			0x01
+#define GPIO2_MODE_WLED_SFT		0x00
+#define GPIO2_MODE_P0_SFT		0x02
+#define GPIO2_MODE_P1_SFT		0x04
+#define GPIO2_MODE_P2_SFT		0x06
+#define GPIO2_MODE_P3_SFT		0x08
+#define GPIO2_MODE_P4_SFT		0x0A
+
+#define MT7628_ETH_LED_CONFIG	((GPIO2_MODE_LED << GPIO2_MODE_P0_SFT) | (GPIO2_MODE_LED << GPIO2_MODE_P1_SFT) |(GPIO2_MODE_LED << GPIO2_MODE_P2_SFT) \
+								 | (GPIO2_MODE_GPIO << GPIO2_MODE_P3_SFT) | (GPIO2_MODE_GPIO << GPIO2_MODE_P4_SFT))
+
 	/* We shall prevent modifying PHY registers if it is FPGA mode */
 #if defined (RT3052_ASIC_BOARD) || defined (RT3352_ASIC_BOARD) || defined (RT5350_ASIC_BOARD) || defined (MT7628_ASIC_BOARD)
 #if defined (RT3052_ASIC_BOARD)
@@ -2143,7 +2160,8 @@ void rt305x_esw_init(void)
         i |= MT7628_EPHY_EN;
         i = i & ~(MT7628_P0_EPHY_AIO_EN);
 #else
-	i = i & ~(MT7628_EPHY_EN);
+	printf("ETH: configuring ports: %x\n", (int)MT7628_ENABLED_PORTS);
+	i = i & ~(MT7628_ENABLED_PORTS);
 #endif
 	RALINK_REG(RT2880_AGPIOCFG_REG) = i;
 
@@ -2161,6 +2179,7 @@ void rt305x_esw_init(void)
         RALINK_REG(RALINK_SYSCTL_BASE + 0x64) = i; // set P0 EPHY LED mode
 #else	
 	i &= 0xf003f003;
+	i |= ((MT7628_ETH_LED_CONFIG << 16) | MT7628_ETH_LED_CONFIG);
 	RALINK_REG(RALINK_SYSCTL_BASE + 0x64) = i;
 #endif
       

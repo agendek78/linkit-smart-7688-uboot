@@ -33,6 +33,9 @@
 #define OPCODE_RES		0xAB	/* Read Electronic Signature */
 #define OPCODE_RDID		0x9F	/* Read JEDEC ID */
 
+#define OPCODE_RDSR3	0x15	/* read status register 3 */
+#define OPCODE_WRSR3	0x11
+
 #define OPCODE_FAST_READ	0x0B		/* Fast Read */
 #define OPCODE_DOR			0x3B	/* Dual Output Read */
 #define OPCODE_QOR			0x6B	/* Quad Output Read */
@@ -83,6 +86,7 @@
 #define SPIC_USER_MODE (1<<2)
 #define SPIC_4B_ADDR (1<<3)
 
+static inline int raspi_write_enable(void);
 
 static int raspi_wait_ready(int sleep_ms);
 #if defined USER_MODE || defined COMMAND_MODE
@@ -1694,6 +1698,43 @@ int ralink_spi_command(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 			}
 		}
 	}
+	else if (!strncmp(argv[1], "sr3", 3)) 
+	{
+		u8 sr;
+		
+		if (spi_chip_info->addr4b)
+		{
+			raspi_4byte_mode(1);
+		}
+
+		if (!strncmp(argv[2], "read", 5)) 
+		{
+			if (raspi_read_rg(OPCODE_RDSR3, &sr) < 0)
+				printf("read sr3 failed\n");
+			else
+				printf("sr3 %x\n", sr);
+		}
+		else if (!strncmp(argv[2], "write", 6)) 
+		{
+			sr = (u8)simple_strtoul(argv[3], NULL, 16);
+			printf("trying write sr3 %x\n", sr);
+			raspi_write_enable();
+			if (raspi_write_rg(OPCODE_WRSR3, &sr) < 0)
+				printf("write sr3 failed\n");
+			else 
+			{
+				if (raspi_read_rg(OPCODE_RDSR3, &sr) < 0)
+					printf("read sr3 failed\n");
+				else
+					printf("sr3 %x\n", sr);
+			}
+		}
+
+		if (spi_chip_info->addr4b)
+		{
+			raspi_4byte_mode(0);
+		}		
+	}	
 	else if (!strncmp(argv[1], "scur", 2)) {
 		u8 scur;
 		if (argv[2][0] == 'r') {
@@ -1715,9 +1756,12 @@ U_BOOT_CMD(
 	"  spi id\n"
 	"  spi sr read\n"
 	"  spi sr write <value>\n"
+	"  spi sr3 read/write\n"
 	"  spi read <addr> <len>\n"
 	"  spi erase <offs> <len>\n"
 	"  spi write <offs> <hex_str_value>\n"
+	"  spi dump_regs \n"
+	"  spi dump\n"
 );
 #endif
 #endif // RALINK_CMDLINE //

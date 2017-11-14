@@ -152,7 +152,7 @@ long int initdram(int board_type)
 
 int checkboard (void)
 {
-	puts ("Board: Ralink APSoC\r\n");
+	puts ("Board: ZBGW IoT Gateway\r\n");
 	return 0;
 }
 
