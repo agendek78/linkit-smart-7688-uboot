@@ -252,7 +252,7 @@ endif
 ifeq ($(MT7621_MP),y)
 CPPFLAGS += -EL -mmt -mips32r2
 else
-CPPFLAGS += -march=4kc -mtune=4kc
+CPPFLAGS += -march=24kc -mtune=24kc
 endif
 
 ifeq ($(RALINK_SPI_UPGRADE_CHECK),ON)
@@ -776,8 +776,8 @@ AFLAGS += -fpic -mabicalls
 endif
 
 #ifeq ($(MT7621_MP),y)
-#CFLAGS +=-fpic
-#AFLAGS +=-fno-pic
+CFLAGS +=-fpic
+AFLAGS +=-fpic
 #endif
 
 LDFLAGS += -Bstatic -T $(LDSCRIPT) -Ttext $(TEXT_BASE) $(PLATFORM_LDFLAGS)
