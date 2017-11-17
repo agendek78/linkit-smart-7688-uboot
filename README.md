@@ -1,29 +1,36 @@
-# linkit-smart-uboot
+# ZBGW IoT uboot
 ============================
-[![Build Status](https://travis-ci.org/AcSiP/linkit-smart-7688-uboot.svg?branch=master)](https://travis-ci.org/AcSiP/linkit-smart-7688-uboot/branches)
 
 
 <BR>
-The UBoot bootloader source code for the AcSiP AI7688H
+The UBoot bootloader source code for the ZBGW IoT board based on HLK-7688 module.
 <BR>
 
-For more information, see the AcSiP website:<BR>
-http://www.acsip.com.tw/index.php?action=products-detail&fid1=11&fid2=21&fid3=23&id=29
+The board layout/schematic can be found on:<BR>
+https://circuitmaker.com/Projects/Details/Andrzej-Gendek/ZBGW
 
+The HLK-7688 module is strapped (configured) to boot in 3-byte addressing mode. This can hang board when rebooting while flash is switched to 4-byte mode.
+To solve this flash should be configured to power up in 4-byte mode and MT7688 booting also strapped to 4-byte addressing mode.
+The following moddifications are needed:
+- remove pull down 4.7k resistor from HLK7688 module (see picture for location of this resistor)
+- add pull up resistor (10k) on CS1 pin - this will change boot mode to 4b addressing
+- program non volatile ADP bit in status register 3 - this will power up flash chip in 4b addressing mode (use "spi sr3 write" command)
+
+After this modifications you can reboot board at any moment and by pressing reset button.
+![HLK7688 module](HLK7688.png "HLK7688 module with removed bootstraping resistor")
 
 
 # Compile
 
 Start by cloning the tree
 
-`git clone https://github.com/AcSiP/linkit-smart-7688-uboot.git`
+`git clone https://github.com/agendek78/linkit-smart-7688-uboot.git`
 
-We need to install the cross toolchain required to build the source
+To compile this code you need MIPSel toolchain. You can build it from sources
+using buildroot. I used GCC 5.7.
 
-`sudo tar xjf buildroot-gcc342.tar.bz2 -C /opt/`
+When you have cros-compiler ready, simple do:  
 
-Finally we can start building the source
-
-`make`
+`make CONFIG_CROSS_COMPILER_PATH=path to the bin dir of the mips GCC crosscompiler`
 
 Notes: Uboot firmware is uboot.bin NOT uboot.img
