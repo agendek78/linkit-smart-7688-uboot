@@ -436,4 +436,10 @@ int usb_new_device(struct usb_device *dev);
 void usb_free_device(void);
 int usb_alloc_device(struct usb_device *dev);
 
+static void __inline__ wait_ms(unsigned int ms) 
+{
+   while(ms-- > 0)
+     udelay(1000);
+}
+
 #endif /*_USB_H_ */

@@ -84,17 +84,7 @@ static struct devrequest setup_packet;
 int usb_hub_probe(struct usb_device *dev, int ifnum);
 void usb_hub_reset(void);
 
-
-/***********************************************************************
- * wait_ms
- */
-
-void __inline__ wait_ms(unsigned long ms)
-{
-	while(ms-->0)
-		udelay(1000);
-}
-/***************************************************************************
+/*
  * Init USB Device
  */
 
