@@ -31,7 +31,7 @@ else
 START	= start.o
 endif
 
-OBJS	= cpu.o
+OBJS	= cpu.o mt76x8_gpio.o
 SOBJS	= cache.o
 
 all:	.depend $(START) $(LIB)

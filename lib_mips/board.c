@@ -33,6 +33,9 @@
 #include <spi_api.h>
 #include <nand_api.h>
 
+#include <gpio.h>
+#include <configs/zbgw.h>
+
 DECLARE_GLOBAL_DATA_PTR;
 #undef DEBUG
 
@@ -878,12 +881,12 @@ __attribute__((nomips16))	void	board_init_f( ulong bootflag )
 #endif
 
 
-#if defined(CFG_RUN_CODE_IN_RAM)
+#if 0 //defined(CFG_RUN_CODE_IN_RAM)
 	/* tricky: relocate code to original TEXT_BASE for ICE souce level debuggind mode	*/
 	debug ("relocate_code Pointer at: %08lx\n", addr);
 	relocate_code (addr_sp, id, /*TEXT_BASE*/ addr);
 #else
-	debug ("relocate_code Pointer at: %08lx\n", addr);
+	debug ("relocate_code Pointer at: %08lx, sp %08lx, id %08lx\n", addr, addr_sp, id);
 	relocate_code (addr_sp, id, addr);
 #endif
 
@@ -1304,6 +1307,7 @@ int check_image_validation(void)
 
 #define PIO_DIR0	0x00
 #define PIO_DIR1	0x04
+#define PIO_DATA0	0x20
 #define PIO_DATA1	0x24
 #define PIO_SET1	0x34
 #define PIO_CLEAR0	0x40
@@ -1313,12 +1317,15 @@ static int smart7688_led_state;
 
 void smart7688_led_blink(void)
 {
-	if (smart7688_led_state) {
-		RALINK_REG(RALINK_PIO_BASE+PIO_SET1) |= (1 << 12);
+	if (smart7688_led_state) 
+	{	
 		smart7688_led_state = 0;
-	} else {
-		RALINK_REG(RALINK_PIO_BASE+PIO_CLEAR1) |= (1 << 12);
+		GPIO_Set(LED_GPIO, smart7688_led_state);
+	} 
+	else 
+	{
 		smart7688_led_state = 1;
+		GPIO_Set(LED_GPIO, smart7688_led_state);
 	}
 }
 
@@ -1992,60 +1999,39 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 	}
 	u32 g;
 
-	// BOOTSTRAP
-	// set GPIO11 to output
-	RALINK_REG(RALINK_PIO_BASE+PIO_DIR0) |= (0x1 << 11);
-	// clear GPIO11
-	RALINK_REG(RALINK_PIO_BASE+PIO_CLEAR0) |= (0x1 << 11);
+	//LED (GPIO44)
+	GPIO_Configure(LED_GPIO, RT2880_GPIO_MODE_OUTPUT);
+	PINMUX_Set(LED_GPIO, RT2880_PINMUX_MODE_GPIO);
 
-	// ARDUINO
-	// set GPIO3/14/15/16/17 to input
-	g = RALINK_REG(RALINK_PIO_BASE+PIO_DIR0);
-	g &= ~((1 << 3) | (1 << 14) | (1 << 15) | (1 << 16) | (1 << 17));
-	RALINK_REG(RALINK_PIO_BASE+PIO_DIR0) = g;
-
-	// EPHY
-	// set GPIO43 to normal led mode
-	g = RALINK_REG(RALINK_SYSCTL_BASE+GPIOMODE2);
-	g &= ~(0x3 << 2);
-	RALINK_REG(RALINK_SYSCTL_BASE+GPIOMODE2) = g;
-
-	// LED
-	// set GPIO44 to normal gpio
-	RALINK_REG(RALINK_SYSCTL_BASE+GPIOMODE2) |= 0x1;
-	// set GPIO44 to output
-	RALINK_REG(RALINK_PIO_BASE+PIO_DIR1) |= (1 << 12);
-	// set /GPIO44
-	RALINK_REG(RALINK_PIO_BASE+PIO_SET1) |= (1 << 12);
-
+	//REL1 (GPIO39), REL2 (GPIO40)
+	GPIO_Configure(REL1_GPIO, RT2880_GPIO_MODE_OUTPUT);
+	GPIO_Configure(REL2_GPIO, RT2880_GPIO_MODE_OUTPUT);
+	PINMUX_Set(REL1_GPIO, RT2880_PINMUX_MODE_GPIO);
+	PINMUX_Set(REL2_GPIO, RT2880_PINMUX_MODE_GPIO);
+	
 	// BUTTON
-	// set GPIO38 to normal gpio
-	RALINK_REG(RALINK_SYSCTL_BASE+GPIOMODE) |= (1 << 14);
-	// set GPIO38 to input
-	g = RALINK_REG(RALINK_PIO_BASE+PIO_DIR1);
-	g &= ~(1 << 6);
-	RALINK_REG(RALINK_PIO_BASE+PIO_DIR1) = g;
-	// check if GPIO38 is set
-	reg = RALINK_REG(RALINK_PIO_BASE+PIO_DATA1);
-
+	GPIO_Configure(BTN_GPIO, RT2880_GPIO_MODE_INPUT);
+	PINMUX_Set(BTN_GPIO, RT2880_PINMUX_MODE_GPIO);
+	// check if GPIO0 is set
+	reg = GPIO_Get(BTN_GPIO);
 
 	printf("\nGPIOMODE --> %x\n", RALINK_REG(RALINK_SYSCTL_BASE+GPIOMODE));
 	printf("\nGPIOMODE2 --> %x\n", RALINK_REG(RALINK_SYSCTL_BASE+GPIOMODE2));
-
-	reg &= (1 << 6);
+#if 0
+	reg &= (1 << 0);
 	if (!reg) {
-		RALINK_REG(RALINK_PIO_BASE+PIO_CLEAR1) |= (1 << 12);
+		RALINK_REG(RALINK_PIO_BASE+PIO_CLEAR1) |= (0x1 << (44 - 31));
 		printf("\n\nRESET BUTTON PRESSED\n");
 		timer1 = 0;
-		while (!(RALINK_REG(RALINK_PIO_BASE+PIO_DATA1) & (1 << 6)))
+		while (!(RALINK_REG(RALINK_PIO_BASE+PIO_DATA0) & (1 << 0)))
 		{
 			for (i=0; i<100; ++i)
 				udelay (10000);
 			timer1++;
 			if (timer1 == 3)
-				RALINK_REG(RALINK_PIO_BASE+PIO_SET1) |= (1 << 12);
+				RALINK_REG(RALINK_PIO_BASE+PIO_SET1) |= (0x1 << (44 - 31));
 			if (timer1 == 20)
-				RALINK_REG(RALINK_PIO_BASE+PIO_CLEAR1) |= (1 << 12);
+				RALINK_REG(RALINK_PIO_BASE+PIO_CLEAR1) |= (0x1 << (44 - 31));
 		}
 		printf("button pressed for %d s\n", timer1);
 
@@ -2094,8 +2080,9 @@ __attribute__((nomips16)) void board_init_r (gd_t *id, ulong dest_addr)
 			
 		}
 	}
+#endif
 
-	RALINK_REG(RALINK_PIO_BASE+PIO_SET1) |= (1 << 12);
+	BootType = '4';
 
 	OperationSelect();
 	while (timer1 > 0) {

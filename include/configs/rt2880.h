@@ -522,5 +522,10 @@ extern unsigned int  CFG_BLOCKSIZE;
 	#define U2_PHY_BASE		(PHY_BASE+0x800)
 #endif
 
+#define RT2880_GPIO_MODE_OUTPUT		0x01u
+#define RT2880_GPIO_MODE_INPUT		0x00u
+
+#define RT2880_PINMUX_MODE_WLEDN	0x00u
+#define RT2880_PINMUX_MODE_GPIO		0x01u
 
 #endif	/* __CONFIG_H */
